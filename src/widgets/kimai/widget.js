@@ -7,7 +7,7 @@ const widget = {
   mappings: {
     timesheets: {
       endpoint: "timesheets",
-      params: ["begin", "end", "size", "full"],
+      params: ["begin", "end", "size"],
     },
     active: {
       endpoint: "timesheets/active",

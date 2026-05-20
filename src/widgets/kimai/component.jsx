@@ -4,8 +4,6 @@ import { useTranslation } from "next-i18next";
 
 import useWidgetAPI from "utils/proxy/use-widget-api";
 
-const DAY_MS = 24 * 60 * 60 * 1000;
-
 function toKimaiDateTime(date) {
   const pad = (n) => String(n).padStart(2, "0");
   return (
@@ -42,17 +40,23 @@ function payPeriodStart(now, anchorIso, length) {
     return candidate;
   }
 
-  const days =
-    length === "weekly" ? 7 : length === "biweekly" ? 14 : Number.parseInt(length, 10) || 14;
-  const elapsed = now - anchor;
-  if (elapsed < 0) return anchor;
-  const periods = Math.floor(elapsed / (days * DAY_MS));
-  return new Date(anchor.getTime() + periods * days * DAY_MS);
+  const days = length === "weekly" ? 7 : length === "biweekly" ? 14 : Number.parseInt(length, 10) || 14;
+  if (now < anchor) return anchor;
+  const elapsedDays = Math.floor((startOfToday(now) - anchor) / (24 * 60 * 60 * 1000));
+  const periods = Math.floor(elapsedDays / days);
+  const start = new Date(anchor.getFullYear(), anchor.getMonth(), anchor.getDate() + periods * days);
+  start.setHours(0, 0, 0, 0);
+  return start;
 }
 
 function sumDurationSeconds(entries) {
   if (!Array.isArray(entries)) return 0;
   return entries.reduce((acc, e) => acc + (typeof e.duration === "number" ? e.duration : 0), 0);
+}
+
+function formatHours(t, seconds) {
+  if (seconds <= 0) return "0m";
+  return t("common.duration", { value: seconds });
 }
 
 export default function Component({ service }) {
@@ -111,9 +115,9 @@ export default function Component({ service }) {
   return (
     <Container service={service}>
       <Block label="kimai.active" value={activeValue} />
-      <Block label="kimai.today" value={t("common.duration", { value: sumDurationSeconds(todayData) })} />
-      <Block label="kimai.week" value={t("common.duration", { value: sumDurationSeconds(weekData) })} />
-      <Block label="kimai.payPeriod" value={t("common.duration", { value: sumDurationSeconds(periodData) })} />
+      <Block label="kimai.today" value={formatHours(t, sumDurationSeconds(todayData))} />
+      <Block label="kimai.week" value={formatHours(t, sumDurationSeconds(weekData))} />
+      <Block label="kimai.payPeriod" value={formatHours(t, sumDurationSeconds(periodData))} />
     </Container>
   );
 }
