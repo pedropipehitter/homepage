@@ -59,6 +59,7 @@ import jellyfin from "./jellyfin/widget";
 import jellystat from "./jellystat/widget";
 import karakeep from "./karakeep/widget";
 import kavita from "./kavita/widget";
+import kimai from "./kimai/widget";
 import komga from "./komga/widget";
 import komodo from "./komodo/widget";
 import kopia from "./kopia/widget";
@@ -217,6 +218,7 @@ const widgets = {
   jellyseerr: seerr,
   jellystat,
   kavita,
+  kimai,
   komga,
   komodo,
   kopia,
