@@ -355,10 +355,6 @@ export function cleanServiceGroups(groups) {
           // jellystat
           days,
 
-          // kimai
-          payPeriodStart,
-          payPeriodLength,
-
           // komodo
           showSummary,
           showStacks,
@@ -571,10 +567,6 @@ export function cleanServiceGroups(groups) {
         }
         if (type === "gamedig") {
           if (gameToken) widget.gameToken = gameToken;
-        }
-        if (type === "kimai") {
-          if (payPeriodStart) widget.payPeriodStart = payPeriodStart;
-          if (payPeriodLength !== undefined) widget.payPeriodLength = payPeriodLength;
         }
         if (type === "kopia") {
           if (snapshotHost) widget.snapshotHost = snapshotHost;

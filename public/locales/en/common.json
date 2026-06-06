@@ -847,7 +847,6 @@
         "active": "Active",
         "today": "Today",
         "week": "Week",
-        "payPeriod": "Pay Period",
         "idle": "No timer running",
         "tracking": "Tracking"
     },

@@ -27,17 +27,15 @@ describe("widgets/kimai/component", () => {
       settings: { hideErrors: false },
     });
 
-    expect(container.querySelectorAll(".service-block")).toHaveLength(4);
+    expect(container.querySelectorAll(".service-block")).toHaveLength(3);
     expect(screen.getByText("kimai.active")).toBeInTheDocument();
     expect(screen.getByText("kimai.today")).toBeInTheDocument();
     expect(screen.getByText("kimai.week")).toBeInTheDocument();
-    expect(screen.getByText("kimai.payPeriod")).toBeInTheDocument();
   });
 
   it("renders error UI when any request errors", () => {
     useWidgetAPI
       .mockReturnValueOnce({ data: undefined, error: { message: "nope" } })
-      .mockReturnValueOnce({ data: undefined, error: undefined })
       .mockReturnValueOnce({ data: undefined, error: undefined })
       .mockReturnValueOnce({ data: undefined, error: undefined });
 
@@ -46,11 +44,10 @@ describe("widgets/kimai/component", () => {
     expect(screen.getAllByText(/widget\.api_error/i).length).toBeGreaterThan(0);
   });
 
-  it("sums timesheet durations and shows the active timer", () => {
+  it("sums timesheet durations into hours and shows the active timer", () => {
     useWidgetAPI
       .mockReturnValueOnce({ data: [{ duration: 3600 }, { duration: 1800 }], error: undefined })
       .mockReturnValueOnce({ data: [{ duration: 7200 }, { duration: 3600 }], error: undefined })
-      .mockReturnValueOnce({ data: [{ duration: 36000 }], error: undefined })
       .mockReturnValueOnce({
         data: [
           {
@@ -65,23 +62,12 @@ describe("widgets/kimai/component", () => {
     renderWithProviders(<Component service={{ widget: { type: "kimai" } }} />, { settings: { hideErrors: false } });
 
     expect(screen.getByText(/Lighting Design/)).toBeInTheDocument();
-  });
-
-  it("falls back to weekly pay period when no anchor is configured", () => {
-    useWidgetAPI
-      .mockReturnValueOnce({ data: [], error: undefined })
-      .mockReturnValueOnce({ data: [], error: undefined })
-      .mockReturnValueOnce({ data: [], error: undefined })
-      .mockReturnValueOnce({ data: [], error: undefined });
-
-    renderWithProviders(<Component service={{ widget: { type: "kimai" } }} />, { settings: { hideErrors: false } });
-
-    expect(screen.getByText("kimai.payPeriod")).toBeInTheDocument();
+    expect(screen.getByText("1h 30m")).toBeInTheDocument();
+    expect(screen.getByText("3h")).toBeInTheDocument();
   });
 
   it("shows idle when no timer is active", () => {
     useWidgetAPI
-      .mockReturnValueOnce({ data: [], error: undefined })
       .mockReturnValueOnce({ data: [], error: undefined })
       .mockReturnValueOnce({ data: [], error: undefined })
       .mockReturnValueOnce({ data: [], error: undefined });

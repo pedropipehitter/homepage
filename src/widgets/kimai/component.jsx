@@ -26,37 +26,19 @@ function startOfWeek(now) {
   return d;
 }
 
-function payPeriodStart(now, anchorIso, length) {
-  if (!anchorIso) return startOfWeek(now);
-
-  const anchor = new Date(anchorIso);
-  if (Number.isNaN(anchor.getTime())) return startOfWeek(now);
-  anchor.setHours(0, 0, 0, 0);
-
-  if (length === "monthly") {
-    const candidate = new Date(now.getFullYear(), now.getMonth(), anchor.getDate());
-    candidate.setHours(0, 0, 0, 0);
-    if (candidate > now) candidate.setMonth(candidate.getMonth() - 1);
-    return candidate;
-  }
-
-  const days = length === "weekly" ? 7 : length === "biweekly" ? 14 : Number.parseInt(length, 10) || 14;
-  if (now < anchor) return anchor;
-  const elapsedDays = Math.floor((startOfToday(now) - anchor) / (24 * 60 * 60 * 1000));
-  const periods = Math.floor(elapsedDays / days);
-  const start = new Date(anchor.getFullYear(), anchor.getMonth(), anchor.getDate() + periods * days);
-  start.setHours(0, 0, 0, 0);
-  return start;
-}
-
 function sumDurationSeconds(entries) {
   if (!Array.isArray(entries)) return 0;
   return entries.reduce((acc, e) => acc + (typeof e.duration === "number" ? e.duration : 0), 0);
 }
 
-function formatHours(t, seconds) {
-  if (seconds <= 0) return "0m";
-  return t("common.duration", { value: seconds });
+function formatHours(seconds) {
+  if (seconds <= 0) return "0h";
+  const totalMinutes = Math.floor(seconds / 60);
+  const h = Math.floor(totalMinutes / 60);
+  const m = totalMinutes % 60;
+  if (h === 0) return `${m}m`;
+  if (m === 0) return `${h}h`;
+  return `${h}h ${m}m`;
 }
 
 export default function Component({ service }) {
@@ -66,7 +48,6 @@ export default function Component({ service }) {
 
   const todayBegin = toKimaiDateTime(startOfToday(now));
   const weekBegin = toKimaiDateTime(startOfWeek(now));
-  const periodBegin = toKimaiDateTime(payPeriodStart(now, widget.payPeriodStart, widget.payPeriodLength));
   const end = toKimaiDateTime(now);
 
   const { data: todayData, error: todayError } = useWidgetAPI(widget, "timesheets", {
@@ -81,25 +62,18 @@ export default function Component({ service }) {
     size: 200,
   });
 
-  const { data: periodData, error: periodError } = useWidgetAPI(widget, "timesheets", {
-    begin: periodBegin,
-    end,
-    size: 500,
-  });
-
   const { data: activeData, error: activeError } = useWidgetAPI(widget, "active");
 
-  if (todayError || weekError || periodError || activeError) {
-    return <Container service={service} error={todayError ?? weekError ?? periodError ?? activeError} />;
+  if (todayError || weekError || activeError) {
+    return <Container service={service} error={todayError ?? weekError ?? activeError} />;
   }
 
-  if (!todayData || !weekData || !periodData || !activeData) {
+  if (!todayData || !weekData || !activeData) {
     return (
       <Container service={service}>
         <Block label="kimai.active" />
         <Block label="kimai.today" />
         <Block label="kimai.week" />
-        <Block label="kimai.payPeriod" />
       </Container>
     );
   }
@@ -115,9 +89,8 @@ export default function Component({ service }) {
   return (
     <Container service={service}>
       <Block label="kimai.active" value={activeValue} />
-      <Block label="kimai.today" value={formatHours(t, sumDurationSeconds(todayData))} />
-      <Block label="kimai.week" value={formatHours(t, sumDurationSeconds(weekData))} />
-      <Block label="kimai.payPeriod" value={formatHours(t, sumDurationSeconds(periodData))} />
+      <Block label="kimai.today" value={formatHours(sumDurationSeconds(todayData))} />
+      <Block label="kimai.week" value={formatHours(sumDurationSeconds(weekData))} />
     </Container>
   );
 }
