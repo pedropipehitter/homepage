@@ -76,4 +76,23 @@ describe("widgets/kimai/component", () => {
 
     expect(screen.getByText("kimai.idle")).toBeInTheDocument();
   });
+
+  it("asks for the same range on every render within a day", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 10, 17, 21, 10, 5));
+    useWidgetAPI.mockReturnValue({ data: undefined, error: undefined });
+    const service = { widget: { type: "kimai" } };
+
+    renderWithProviders(<Component service={service} />, { settings: { hideErrors: false } });
+    vi.setSystemTime(new Date(2026, 10, 17, 21, 10, 7));
+    renderWithProviders(<Component service={service} />, { settings: { hideErrors: false } });
+    vi.useRealTimers();
+
+    const [today, week] = useWidgetAPI.mock.calls.slice(0, 2).map((call) => call[2]);
+    const [todayAgain, weekAgain] = useWidgetAPI.mock.calls.slice(3, 5).map((call) => call[2]);
+    expect(today).toEqual({ begin: "2026-11-17T00:00:00", end: "2026-11-17T23:59:59", size: 200 });
+    expect(week).toEqual({ begin: "2026-11-16T00:00:00", end: "2026-11-17T23:59:59", size: 200 });
+    expect(todayAgain).toEqual(today);
+    expect(weekAgain).toEqual(week);
+  });
 });
