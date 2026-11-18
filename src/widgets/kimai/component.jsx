@@ -18,6 +18,12 @@ function startOfToday(now) {
   return d;
 }
 
+function endOfToday(now) {
+  const d = new Date(now);
+  d.setHours(23, 59, 59, 0);
+  return d;
+}
+
 function startOfWeek(now) {
   const d = startOfToday(now);
   const day = d.getDay();
@@ -46,9 +52,12 @@ export default function Component({ service }) {
   const { widget } = service;
   const now = new Date();
 
+  // Every value here must stay the same between renders: they form the request's
+  // cache key, and a key that changed every second (end = now) left the widget
+  // waiting on a fresh request forever, so it never got past the loading state.
   const todayBegin = toKimaiDateTime(startOfToday(now));
   const weekBegin = toKimaiDateTime(startOfWeek(now));
-  const end = toKimaiDateTime(now);
+  const end = toKimaiDateTime(endOfToday(now));
 
   const { data: todayData, error: todayError } = useWidgetAPI(widget, "timesheets", {
     begin: todayBegin,
